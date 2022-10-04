@@ -73,13 +73,12 @@ class config_t:
         v_dv = round(100*abs((self.total_voltage_max - VOLT_TARGET) / VOLT_TARGET), 4)
         v_sign = '+' if VOLT_TARGET < self.total_voltage_max else '-'
         v_sign = '+' if VOLT_TARGET < self.total_voltage_max else '-'
-        mystring = f"{VOLT_TARGET} {v_sign}{v_dv}% - {self.cell.name}\n"
+        mystring = f"{VOLT_TARGET}V {v_sign}{v_dv}% - {self.cell.name}\n"
         mystring += ' '.join(['\t' + k + " : " + str(v) + '\n' for k, v in params.items()])
         return mystring
 
+
 # Cells
-
-
 S_50S = cell_t("Samsung INR21700-50S", 4.2, 3.6, 2.5, 5.0, 4.8, 45, 6, 72)
 P45B = cell_t("Molicel INR21700-P45B", 4.2, 3.6, 2.5, 4.5, 4.3, 45, 4.5, 70)
 P42A = cell_t("Molicel INR21700-P42A", 4.2, 3.6, 2.5, 4.2, 4.0, 45, 4.2, 70)
@@ -91,10 +90,10 @@ CELLS = (P42A, P45B, S_50S, P28B)
 RANGE_PACK_SERIES = range(1, 32)
 RANGE_PACK_PARALLEL = range(1, 32)
 RANGE_ACCUMULATOR_PACKS_SERIES = range(1, 12)
-RANGE_ACCUMULATOR_PACKS_PARALLEL = range(1, 2)
+RANGE_ACCUMULATOR_PACKS_PARALLEL = range(1, 12)
 
 # Targets
-VOLT_TARGET = 300
+VOLT_TARGET = 550
 VOLT_MARGIN = 20
 CAP_TOTAL_MAX_WH = 5405.5
 CAP_TOTAL_MIN_WH = CAP_TOTAL_MAX_WH * 0.7
