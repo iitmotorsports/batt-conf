@@ -49,11 +49,12 @@ class config_t:
         self.segment_volt_nominal = series * cell.volt_nominal
         self.segment_volt_max = series * cell.volt_max
 
-    def __lt__(self, other) -> bool:
-        return self.max_accumulator_capacity_wh < other.max_accumulator_capacity_wh
-
-    def __str__(self) -> str:
-        params = {
+    def info(self) -> dict:
+        v_sign = '+' if VOLT_TARGET < self.total_voltage_max else '-'
+        v_sign = '+' if VOLT_TARGET < self.total_voltage_max else '-'
+        v_dv = round(100*abs((self.total_voltage_max - VOLT_TARGET) / VOLT_TARGET), 4)
+        return {
+            "target_volt_dv": f"{v_sign}{v_dv}",
             "total_cells": self.total_cells,
             "packs": self.packs,
             "pack_parallel": self.pack_parallel,
@@ -70,10 +71,15 @@ class config_t:
             "max_accumulator_capacity_Wh": self.max_accumulator_capacity_wh,
             "max_segment_capacity_MJ": self.max_segment_capacity_mj,
         }
-        v_dv = round(100*abs((self.total_voltage_max - VOLT_TARGET) / VOLT_TARGET), 4)
-        v_sign = '+' if VOLT_TARGET < self.total_voltage_max else '-'
-        v_sign = '+' if VOLT_TARGET < self.total_voltage_max else '-'
-        mystring = f"{VOLT_TARGET}V {v_sign}{v_dv}% - {self.cell.name}\n"
+
+    def __lt__(self, other) -> bool:
+        return self.max_accumulator_capacity_wh < other.max_accumulator_capacity_wh
+
+    def __str__(self) -> str:
+        params = self.info()
+        v_dv = params["target_volt_dv"]
+        del params["target_volt_dv"]
+        mystring = f"{VOLT_TARGET}V {v_dv}% - {self.cell.name}\n"
         mystring += ' '.join(['\t' + k + " : " + str(v) + '\n' for k, v in params.items()])
         return mystring
 
@@ -90,13 +96,13 @@ CELLS = (P42A, P45B, S_50S, P28B)
 RANGE_PACK_SERIES = range(1, 32)
 RANGE_PACK_PARALLEL = range(1, 32)
 RANGE_ACCUMULATOR_PACKS_SERIES = range(1, 12)
-RANGE_ACCUMULATOR_PACKS_PARALLEL = range(1, 12)
+RANGE_ACCUMULATOR_PACKS_PARALLEL = range(1, 4)
 
 # Targets
 VOLT_TARGET = 550
 VOLT_MARGIN = 20
 CAP_TOTAL_MAX_WH = 5405.5
-CAP_TOTAL_MIN_WH = CAP_TOTAL_MAX_WH * 0.7
+CAP_TOTAL_MIN_WH = CAP_TOTAL_MAX_WH * 0.6
 CAP_SEGMENT_MAX_MJ = 6.5
 VOLT_SEGMENT_MAX = 120.5
 
