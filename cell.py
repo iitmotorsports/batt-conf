@@ -32,6 +32,16 @@ S_50S = cell_t("Samsung INR21700-50S",
                charge_amps=6,
                weight_gram=72)
 
+S_40T = cell_t("Samsung INR21700-40T",
+              volt_max=4.2,
+              volt_nominal=3.6,
+              volt_min=2.5,
+              cap_typical_ah=4.0,
+              cap_min_ah=3.9,
+              discharge_amps=35,
+              charge_amps=2,
+              weight_gram=70)
+
 P45B = cell_t("Molicel INR21700-P45B",
               volt_max=4.2,
               volt_nominal=3.6,
@@ -72,4 +82,4 @@ P28A = cell_t("Molicel INR18650-P28A",
               charge_amps=2.8,
               weight_gram=48)
 
-CELLS = (P42A, P45B, S_50S, P28B, P28A)
+CELLS = (P42A, P45B, S_50S, S_40T, P28B, P28A)
