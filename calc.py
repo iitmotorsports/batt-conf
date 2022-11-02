@@ -38,7 +38,7 @@ class config_t:
             "series_segments": self.series_segments,
             "parallel": self.parallel,
             "series": self.series,
-            "weight_kg": self.weight/1000,
+            "weight_kg": self.weight / 1000,
             "total_volt_nominal": self.total_volt_nominal,
             "total_volt_max": self.total_volt_max,
             "total_power_nominal_kW": self.total_discharge_cont_amps * self.total_volt_nominal / 1000, #TODO: How is power calculated?
