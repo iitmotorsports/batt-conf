@@ -10,7 +10,9 @@ class cell_t:
     charge_amps: float = 0
     weight_gram: float = 0
 
-    def __init__(self, name: str, volt_max: float, volt_nominal: float, volt_min: float, cap_typical_ah: float, cap_min_ah: float, discharge_cont_amps: float, discharge_peak_amps: float, charge_amps: float, weight_gram: float) -> None:
+    def __init__(self, name: str, volt_max: float, volt_nominal: float, volt_min: float, cap_typical_ah: float, cap_min_ah: float, discharge_cont_amps: float, discharge_peak_amps: float, charge_amps: float, weight_gram: float, height: float, diameter: float) -> None:
+        self.height = height
+        self.diameter = diameter
         self.name = name
         self.volt_max = volt_max
         self.volt_nominal = volt_nominal
@@ -34,7 +36,8 @@ LG_HG2 = cell_t("LG 18650HG2",
                 discharge_cont_amps=7.9,
                 discharge_peak_amps=20,
                 charge_amps=1.25,
-                weight_gram=48)
+                weight_gram=48
+                )
 
 S_50S = cell_t("Samsung INR21700-50S",
                volt_max=4.2,
@@ -44,6 +47,7 @@ S_50S = cell_t("Samsung INR21700-50S",
                cap_min_ah=4.8,
                discharge_cont_amps=16.9,
                discharge_peak_amps=29.2,
+
                charge_amps=6,
                weight_gram=72)
 
