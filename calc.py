@@ -1,6 +1,8 @@
 from __future__ import annotations
 from cell import cell_t
 
+CELL_DIAMETER_BUF_MM = 6
+
 
 class config_t:
     def __init__(self, cell: cell_t, parallel_segments: float, series_segments: float, parallel: float, series: float, voltage_target: float) -> None:
@@ -24,6 +26,9 @@ class config_t:
         self.segment_volt_nominal = series * cell.volt_nominal
         self.segment_volt_max = series * cell.volt_max
         self.voltage_target = voltage_target
+        self.segment_width = (0.866 * (self.parallel - 1) + 1) * (cell.diameter + CELL_DIAMETER_BUF_MM)
+        self.segment_length = (self.segment_cells + 0.5) * (cell.diameter + CELL_DIAMETER_BUF_MM)
+        self.segment_mm2 = self.segment_length * self.segment_width
 
     def info(self) -> dict:
         v_sign = '+' if self.voltage_target < self.total_volt_max else '-'
@@ -41,7 +46,7 @@ class config_t:
             "weight_kg": self.weight / 1000,
             "total_volt_nominal": self.total_volt_nominal,
             "total_volt_max": self.total_volt_max,
-            "total_power_nominal_kW": self.total_discharge_cont_amps * self.total_volt_nominal / 1000, #TODO: How is power calculated?
+            "total_power_nominal_kW": self.total_discharge_cont_amps * self.total_volt_nominal / 1000,  # TODO: How is power calculated?
             "total_power_max_kW": self.total_discharge_peak_amps * self.total_volt_max / 1000,
             "total_typ_capacity_wh": self.total_typ_capacity_wh,
             "total_max_capacity_wh": self.total_max_capacity_wh,
