@@ -16,6 +16,8 @@ class config_t:
         self.total_volt_nominal = series * series_segments * cell.volt_nominal
         self.total_volt_max = series * series_segments * cell.volt_max
         self.total_typ_capacity_wh = self.total_cells * cell.volt_nominal * cell.cap_typical_ah * 0.8
+        self.total_discharge_cont_amps = cell.discharge_cont_amps * self.parallel
+        self.total_discharge_peak_amps = cell.discharge_peak_amps * self.parallel
         self.segment_typ_capacity_mj = self.segment_cells * cell.volt_nominal * cell.cap_typical_ah * 0.0036
         self.total_max_capacity_wh = self.total_cells * cell.volt_max * cell.cap_typical_ah
         self.segment_max_capacity_mj = self.segment_cells * cell.volt_max * cell.cap_typical_ah * 0.0036
@@ -39,8 +41,12 @@ class config_t:
             "weight_kg": self.weight/1000,
             "total_volt_nominal": self.total_volt_nominal,
             "total_volt_max": self.total_volt_max,
+            "total_power_nominal_kW": self.total_discharge_cont_amps * self.total_volt_nominal / 1000, #TODO: How is power calculated?
+            "total_power_max_kW": self.total_discharge_peak_amps * self.total_volt_max / 1000,
             "total_typ_capacity_wh": self.total_typ_capacity_wh,
             "total_max_capacity_wh": self.total_max_capacity_wh,
+            "total_discharge_cont_amps": self.total_discharge_cont_amps,
+            "total_discharge_peak_amps": self.total_discharge_peak_amps,
             "segment_volt_nominal": self.segment_volt_nominal,
             "segment_volt_max": self.segment_volt_max,
             "segment_typ_capacity_mj": self.segment_typ_capacity_mj,
