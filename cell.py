@@ -12,8 +12,9 @@ class cell_t:
     discharge_peak_amps: float = 0
     charge_amps: float = 0
     weight_gram: float = 0
+    price: float = 0
 
-    def __init__(self, name: str, volt_max: float, volt_nominal: float, volt_min: float, cap_typical_ah: float, cap_min_ah: float, discharge_cont_amps: float, discharge_peak_amps: float, charge_amps: float, weight_gram: float, height: float, diameter: float) -> None:
+    def __init__(self, name: str, volt_max: float, volt_nominal: float, volt_min: float, cap_typical_ah: float, cap_min_ah: float, discharge_cont_amps: float, discharge_peak_amps: float, charge_amps: float, weight_gram: float, height: float, diameter: float, price: float) -> None:
         self.height = height
         self.diameter = diameter
         self.name = name
@@ -26,6 +27,7 @@ class cell_t:
         self.discharge_peak_amps = discharge_peak_amps
         self.charge_amps = charge_amps
         self.weight_gram = weight_gram
+        self.price = price
 
 
 CELLS = []
@@ -34,4 +36,5 @@ with open('cells.csv', newline='') as csv_file:
     reader = csv.reader(csv_file, dialect='excel')
     next(reader)
     for row in reader:
-        CELLS.append(cell_t(row[0], *[float(x) for x in row[1:]]))
+        if not row[1]:
+            CELLS.append(cell_t(row[0], *[float(x) for x in row[3:]]))

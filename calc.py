@@ -31,7 +31,8 @@ class config_t:
         self.segment_length = (0.866 * ((self.segment_cells / self.parallel)-1) + 1) * (cell.diameter + CELL_DIAMETER_BUF_MM)
         self.segment_dim = f"{int(self.segment_length)}mm x {int(self.segment_width)}mm"
         self.segment_m_2 = round(self.segment_length * self.segment_width / 1000000, 3)
-        self.volume_m_3 = round(self.segment_length * self.segment_width * cell.height * self.segments / 1000000000, 3)
+        self.volume_m_3 = round(self.segment_length * self.segment_width * cell.height * self.segments / 1000000000, 4)
+        self.price = round(cell.price * self.total_cells, 2)
 
     def info(self) -> dict:
         v_sign = '+' if self.voltage_target < self.total_volt_max else '-'
@@ -41,6 +42,7 @@ class config_t:
             "Cell Name": self.cell.name,
             "V∆": f"{v_sign}{v_dv}",
             "Cells": self.total_cells,
+            "Price": self.price,
             "Segments": self.segments,
             # "parallel_segments": self.parallel_segments,
             # "series_segments": self.series_segments,
