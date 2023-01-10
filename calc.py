@@ -1,7 +1,8 @@
 from __future__ import annotations
 from cell import cell_t
 
-CELL_DIAMETER_BUF_MM = 2
+CELL_DIAMETER_BUF_MM = 2  # Approx 4mm of pcc between cells
+PCC_DENSITY_KG_M_3 = 890
 
 
 class config_t:
@@ -32,6 +33,13 @@ class config_t:
         self.segment_dim = f"{int(self.segment_length)}mm x {int(self.segment_width)}mm"
         self.segment_m_2 = round(self.segment_length * self.segment_width / 1000000, 3)
         self.volume_m_3 = round(self.segment_length * self.segment_width * cell.height * self.segments / 1000000000, 4)
+        self.pcc_weight_kg = 0
+        if PCC_DENSITY_KG_M_3:
+            segment_width = (self.parallel + 0.5) * cell.diameter
+            segment_length = (0.866 * ((self.segment_cells / self.parallel)-1) + 1) * cell.diameter
+            volume_m_3 = round(segment_length * segment_width * cell.height * self.segments / 1000000000, 4)
+            self.pcc_weight_kg = (self.volume_m_3 - volume_m_3) * PCC_DENSITY_KG_M_3
+            self.weight += self.pcc_weight_kg * 1000
         self.price = round(cell.price * self.total_cells, 2)
 
     def info(self) -> dict:
@@ -49,6 +57,7 @@ class config_t:
             "Parallel Seg Cell": self.parallel,
             "Series Seg Cell": self.series,
             "Kg": round(self.weight / 1000, 2),
+            "PCC Kg": round(self.pcc_weight_kg, 2),
             "m³": self.volume_m_3,
             "Volt Nom": self.total_volt_nominal,
             "Volt Max": self.total_volt_max,
