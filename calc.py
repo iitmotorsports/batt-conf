@@ -35,19 +35,19 @@ class config_t:
         self.price = round(cell.price * self.total_cells, 2)
 
     def info(self) -> dict:
-        v_sign = '+' if self.voltage_target < self.total_volt_max else '-'
-        v_sign = '+' if self.voltage_target < self.total_volt_max else '-'
-        v_dv = round(100*abs((self.total_volt_max - self.voltage_target) / self.voltage_target), 4)
+        v_sign = '+' if self.voltage_target < self.total_volt_nominal else '-'
+        v_sign = '+' if self.voltage_target < self.total_volt_nominal else '-'
+        v_dv = round(100*abs((self.total_volt_nominal - self.voltage_target) / self.voltage_target), 4)
         return {
             "Cell Name": self.cell.name,
             "V∆": f"{v_sign}{v_dv}",
             "Cells": self.total_cells,
             "Price": self.price,
             "Segments": self.segments,
-            # "parallel_segments": self.parallel_segments,
-            # "series_segments": self.series_segments,
-            "Seg Parallel": self.parallel,
-            "Seg Series": self.series,
+            # "Parallel Seg": self.parallel_segments,
+            # "Series Seg": self.series_segments,
+            "Parallel Seg Cell": self.parallel,
+            "Series Seg Cell": self.series,
             "Kg": round(self.weight / 1000, 2),
             "m³": self.volume_m_3,
             "Volt Nom": self.total_volt_nominal,
