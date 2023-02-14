@@ -4,30 +4,36 @@ from cell import CELLS
 from calc import config_t
 
 # Range Check
-RANGE_SEGMENT_SERIES = range(1, 25)
-RANGE_SEGMENT_PARALLEL = range(1, 65)
-RANGE_ACCUMULATOR_SEGMENTS_SERIES = range(1, 13)
-RANGE_ACCUMULATOR_SEGMENTS_PARALLEL = range(1, 2)
+RANGE_SEGMENT_SERIES = list(range(1, 25))
+RANGE_SEGMENT_PARALLEL = list(range(1, 65))
+RANGE_ACCUMULATOR_SEGMENTS_SERIES = list(range(1, 13))
+RANGE_ACCUMULATOR_SEGMENTS_PARALLEL = list(range(1, 2))
 
 # Targets
-VOLT_TARGET = 390
+VOLT_TARGET = 250
 VOLT_MAX = 600
-VOLT_MIN = 350
-CAP_TOTAL_MAX_WH = 7000
+VOLT_MIN = 300
+CAP_TOTAL_MAX_WH = 10000
 CAP_TOTAL_MIN_WH = 3000
 CAP_SEGMENT_MAX_MJ = 6.1
 VOLT_SEGMENT_MAX = 120.1
+
+ADDITIONAL_CONFIG = [
+    (6, 1, 16, 8),
+]
+
+for ss, sp, s, p in ADDITIONAL_CONFIG:
+    RANGE_SEGMENT_SERIES.append(ss)
+    RANGE_SEGMENT_PARALLEL.append(sp)
+    RANGE_ACCUMULATOR_SEGMENTS_SERIES.append(s)
+    RANGE_ACCUMULATOR_SEGMENTS_PARALLEL.append(p)
 
 results: List[config_t] = []
 
 for cell_sel in CELLS:
     for pk_parallel in RANGE_ACCUMULATOR_SEGMENTS_PARALLEL:
         for pk_series in RANGE_ACCUMULATOR_SEGMENTS_SERIES:
-            if pk_parallel * pk_series % 2 != 0:
-                continue
             for c_parallel in RANGE_SEGMENT_PARALLEL:
-                if c_parallel != 1 and c_parallel % 2 != 0:
-                    continue
                 for c_series in RANGE_SEGMENT_SERIES:
                     if c_series != 1 and c_series % 2 != 0:
                         continue
