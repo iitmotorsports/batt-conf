@@ -45,11 +45,10 @@ class config_t:
 
     def info(self) -> dict:
         v_sign = '+' if self.voltage_target < self.total_volt_nominal else '-'
-        v_sign = '+' if self.voltage_target < self.total_volt_nominal else '-'
         v_dv = round(100*abs((self.total_volt_nominal - self.voltage_target) / self.voltage_target), 4)
         return {
             "Cell Name": self.cell.name,
-            "V∆": f"{v_sign}{v_dv}",
+            "V∆": float(f"{v_sign}{v_dv}"),
             "Cells": self.total_cells,
             "Price": self.price,
             "Total Segments": self.segments,
@@ -67,7 +66,7 @@ class config_t:
             "Typ Cap Wh": self.total_typ_capacity_wh,
             "Max Cap Wh": self.total_max_capacity_wh,
             "Wh/Kg": round(self.total_typ_capacity_wh / self.weight_kg, 4),
-            "kW/Kg": round(self.power_nom_kw / self.weight_kg, 2),
+            "kW/Kg": round(self.power_nom_kw / self.weight_kg, 4),
             "Discharge Cont. A": self.total_discharge_cont_amps,
             "Discharge Peak A": self.total_discharge_peak_amps,
             "Seg Dim": self.segment_dim,

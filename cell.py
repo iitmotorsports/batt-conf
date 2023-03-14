@@ -32,7 +32,7 @@ class cell_t:
 
 CELLS = []
 
-with open('cells.csv', newline='') as csv_file:
+with open('cells.csv', newline='', encoding='utf-8') as csv_file:
     reader = csv.reader(csv_file, dialect='excel')
     next(reader)
     for row in reader:
