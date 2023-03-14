@@ -6,17 +6,19 @@ import importlib
 try:
     import openpyxl
     import pandas
+    import cadquery as cq
 except ImportError:
     print("Some required packages are missing. Installing now...")
     os.system('pip install -r requirements.txt')
     importlib.invalidate_caches()
 
 import pandas as pd
-from openpyxl import Workbook
+from openpyxl import load_workbook
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Color
 from openpyxl.utils.cell import get_column_letter
 from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import Font
 
 from cell import CELLS
 from calc import config_t
@@ -117,11 +119,19 @@ df = pd.DataFrame([[y for y in x.info().values()] for x in results], columns=lis
 for k, v in accending_sort:
     df.sort_values(k, ascending=v, inplace=True)
 
-wb = Workbook()
+
+wb = load_workbook(filename="VBA.xlsm", keep_vba=True)
 ws = wb.active
 
 for r in dataframe_to_rows(df, index=False, header=True):
     ws.append(r)
+
+ws.insert_cols(2)
+ws.cell(row=1, column=2, value="CAD")
+font = Font(underline="single", color="006796")
+for row in range(2, ws.max_row + 1):
+    cell = ws.cell(row=row, column=2, value="Generate")
+    cell.font = font
 
 ws.auto_filter.ref = ws.dimensions
 
@@ -142,5 +152,5 @@ for column in ws.columns:
     adjusted_width = max_length + (10 / sqrt(max_length+1))
     ws.column_dimensions[column_dimensions].width = adjusted_width
 
-wb.save('output.xlsx')
-os.system('output.xlsx')
+wb.save('output.xlsm')
+os.system('output.xlsm')

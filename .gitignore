@@ -2,3 +2,7 @@ output.csv
 \__pycache__
 .*#
 *.xlsx
+*.xlsm
+!VBA.xlsm
+models
+*.log
