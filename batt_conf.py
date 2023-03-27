@@ -7,6 +7,7 @@ try:
     import openpyxl
     import pandas
     import cadquery as cq
+    import tqdm
 except ImportError:
     print("Some required packages are missing. Installing now...")
     os.system('pip install -r requirements.txt')
