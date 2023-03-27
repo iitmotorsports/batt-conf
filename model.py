@@ -27,16 +27,16 @@ if not os.path.exists('models'):
 # FIXME: not staggered is broken
 
 
-def gen_model(cell_name, num_rows, num_cols, spacing=2, staggered=True, highres=True, step=True, force=False, export=True):
+def gen_model(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highres=True, step=True, force=False, export=True):
     num_rows = int(num_rows)  # Parallel
     num_cols = int(num_cols)  # Series
 
     # TODO: ability to 'stack' current collection across multiple rows
 
-    filename = os.path.join('models', f'pack_{cell_name}_{num_rows}_{num_cols}_{spacing}_{staggered}'.replace(
+    filename = os.path.join('models', f'pack_{cell_name}_{num_rows}_{num_cols}_{spacing_mm}_{staggered}'.replace(
         " ", '_').replace("-", '_').replace(".", '_'))
 
-    if not force and os.path.exists(f'{filename}.stl'):
+    if not export and not force and os.path.exists(f'{filename}.stl'):
         return f'{filename}.stl'
 
     df = pd.read_csv('cells.csv')
@@ -54,17 +54,17 @@ def gen_model(cell_name, num_rows, num_cols, spacing=2, staggered=True, highres=
         top_radius = cell_diameter/3 * 0.50
         wrap_radius = cell_diameter/3 * 0.75
 
-    collector_radius = min(wrap_radius * 1.25, (cell_diameter - spacing)/2)
+    collector_radius = min(wrap_radius * 1.25, (cell_diameter - spacing_mm)/2)
     collector_pad_out_radius = wrap_radius
     collector_pad_in_radius = top_radius
     collector_thick = 1
     collector_fuse_width = (collector_pad_out_radius-collector_pad_in_radius)/4  # TODO: current capacity of nickel x4
 
     points = []
-    stag = (cell_diameter / 2 + spacing / 2)
-    dist = sqrt(((cell_diameter + spacing)**2) - (stag**2))
+    stag = (cell_diameter / 2 + spacing_mm / 2)
+    dist = sqrt(((cell_diameter + spacing_mm)**2) - (stag**2))
     for j in range(num_rows):
-        y = j * (cell_diameter + spacing)
+        y = j * (cell_diameter + spacing_mm)
         flip = True
         for i in range(num_cols):
             flip = not flip
@@ -79,11 +79,11 @@ def gen_model(cell_name, num_rows, num_cols, spacing=2, staggered=True, highres=
     cells = cells[0]
 
     box = cq.Workplane('XY').box(
-        (dist * (num_cols - 1)) + cell_diameter + spacing * 2,
-        ((num_rows + 0.5) * (cell_diameter + spacing)) + spacing,
+        (dist * (num_cols - 1)) + cell_diameter + spacing_mm * 2,
+        ((num_rows + 0.5) * (cell_diameter + spacing_mm)) + spacing_mm,
         cell_length/2,
         centered=False
-    ).translate((-spacing - cell_diameter/2, -spacing - cell_diameter / 2, cell_length/4))
+    ).translate((-spacing_mm - cell_diameter/2, -spacing_mm - cell_diameter / 2, cell_length/4))
 
     box = box.cut(cells)
     box = box.faces("<Z").wires().toPending().extrude(-cell_length/4).faces(">Z").wires().toPending().extrude(cell_length/4)
@@ -116,7 +116,7 @@ def gen_model(cell_name, num_rows, num_cols, spacing=2, staggered=True, highres=
                 plate_sk.edge(s)
             plate = plate_sk.hull().clean().finalize().extrude(flip*collector_thick, combine=False)
             if col > 1:  # FIXME: shouldn't need this
-                plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + spacing)*(num_rows-0.5)), 0))
+                plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + spacing_mm)*(num_rows-0.5)), 0))
 
             # FIXME: potential bug?
             _ = plate_pnts.extrude(flip*collector_thick*2, combine=False)
@@ -140,7 +140,6 @@ def gen_model(cell_name, num_rows, num_cols, spacing=2, staggered=True, highres=
     positive = True if num_cols % 2 == 0 else False
     positive = plate(False, positive)
     plate(True, positive)
-
     if export:
         battery_pack.save(f'{filename}.stl', tolerance=0.8, angularTolerance=0.8)
         if step:
@@ -163,4 +162,4 @@ def main():
 if __name__ == '__main__':
     main()
 
-# show_object(gen_model("Molicel INR18650-P28B", 4, 5, highres=False))
+show_object(gen_model("Molicel INR18650-P28B", 4, 5, export=False))
