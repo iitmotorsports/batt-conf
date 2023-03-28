@@ -39,7 +39,7 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
     filename = os.path.join('models', f'pack_{cell_name}_{num_rows}_{num_cols}_{spacing_mm}_{staggered}'.replace(
         " ", '_').replace("-", '_').replace(".", '_'))
 
-    if not export and not force and os.path.exists(f'{filename}.stl'):
+    if export and not force and os.path.exists(f'{filename}.stl'):
         progress.close()
         return f'{filename}.stl'
 
@@ -121,7 +121,6 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
             it.insert(0, 1)
         progress.update(5)
         for col in it:
-            progress.text("Current Collector : Selecting")
             if col+1 > num_cols or (flipped and col == 1):
                 plate_pnts = _box.edges(f"<<X[-{col}]")
                 plate = plate_pnts.circle(collector_radius).edges("<<Y[-1] or <<Y[0]")
@@ -131,7 +130,6 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
                 plate_pnts = _box.edges(f"<<X[-{col}] or <<X[-{col+1}]")
                 plate = plate_pnts.circle(collector_radius).edges("<<Y[-1] or <<Y[-2] or <<Y[0] or <<Y[1]")
                 tag = False
-            progress.text("Current Collector : Plating")
             plate_edges = plate.objects
             plate = plate.edges(">>Y[-1]" if (flipped and col != 1) else "<<Y[-1]")
             plate_sk = plate.sketch()
@@ -141,22 +139,12 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
             if col > 1:  # FIXME: shouldn't need this
                 plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + spacing_mm)*(num_rows-0.5)), 0))
 
-            progress.text("Current Collector : Cutting")
-
             plate_pnts = plate_pnts.sketch()
-            plate_pnts = plate_pnts.circle(collector_pad_out_radius).circle(collector_pad_in_radius, mode="s")
-            plate_pnts = plate_pnts.polygon(
-                [
-                    (0, -collector_fuse_width/2),
-                    (0, collector_fuse_width/2),
-                    (collector_pad_out_radius, collector_fuse_width/2),
-                    (collector_pad_out_radius, -collector_fuse_width/2),
-                ], mode="s"
-            )
-            plate_pnts = plate_pnts.clean().finalize().extrude(collector_thick*2, combine=False, both=True)
-            plate = plate.cut(plate_pnts).clean()
+            plate_pnts = plate_pnts.circle(collector_pad_out_radius).circle(collector_pad_in_radius, mode="s").clean()
+            plate_pnts = plate_pnts.rect(collector_fuse_width, collector_pad_out_radius*2, mode="s")
+            plate_pnts = plate_pnts.clean().finalize().extrude(collector_thick*flip, combine=False).clean()  # Using both breaks it?
 
-            progress.text("Current Collector : Assemble")
+            plate = plate.cut(plate_pnts).clean()
 
             clr = [160/255, 165/255, 195/255, 1]
             if tag:
@@ -188,5 +176,4 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
 
 
 if 'cq_editor' in sys.modules:
-    CQ_EDITING = True
     show_object(gen_pack("Molicel INR21700-P45B", 4, 3, export=False))
