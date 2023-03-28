@@ -15,7 +15,7 @@ class progress_bar:
     def __init__(self, desc, num_rows, num_cols) -> None:
         if not CQ_EDITING:
             self.desc = desc
-            self.bar = tqdm(total=MODEL_GEN_STEPS+num_rows*num_cols+num_cols, desc=desc, bar_format='{l_bar}{bar}|', leave=False)
+            self.bar = tqdm(total=MODEL_GEN_STEPS+num_rows*num_cols, desc=desc, bar_format='{l_bar}{bar}|', leave=False)
 
     def text(self, msg: str):
         if not CQ_EDITING:
