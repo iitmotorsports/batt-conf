@@ -1,10 +1,10 @@
 cell_name,ignore,comments,volt_max,volt_nominal,volt_min,cap_typical_ah,cap_min_ah,discharge_cont_amps,discharge_peak_amps,charge_amps,weight_gram,height,diameter,price
-LG 18650HG2,x,Hawkrod cells,4.2,3.6,2.5,3,3,7.9,20,1.25,48,65,18.3,6
+LG 18650HG2,,Hawkrod cells,4.2,3.6,2.5,3,3,7.9,20,1.25,48,65,18.3,6
 Samsung INR21700-50S,x,,4.2,3.6,2.5,5,4.8,16.9,29.2,6,72,70.62,21.25,9
 Samsung INR21700-40T,x,,4.2,3.6,2.5,4,3.9,21.5,45,2,70,70.3,21.22,6
 Samsung INR21700-30T,,,4.2,3.6,2.5,3,3,30.7,34,4,68.3,70.3,21.1,5
 Samsung INR18650-30Q,x,,4.2,3.6,2.5,3,3,15,15,1.5,48,64.85,18.33,4
 Molicel INR21700-P45B,,,4.2,3.6,2.5,4.5,4.3,22.9,45,4.5,70,70.15,21.55,11
 Molicel INR21700-P42A,x,,4.2,3.6,2.5,4.2,4,21.5,45,4.2,70,70.2,21.7,6
-Molicel INR18650-P28B,,,4.2,3.6,2.5,2.8,2.65,19,40,2.8,48,65.2,18.6,9
+Molicel INR18650-P28B,x,,4.2,3.6,2.5,2.8,2.65,19,40,2.8,48,65.2,18.6,9
 Molicel INR18650-P28A,x,,4.2,3.6,2.5,2.8,2.6,17.8,35,2.8,48,65.2,18.6,5

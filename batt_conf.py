@@ -28,7 +28,7 @@ from calc import config_t
 RANGE_SEGMENT_SERIES = list(range(1, 25))
 RANGE_SEGMENT_PARALLEL = list(range(1, 65))
 RANGE_ACCUMULATOR_SEGMENTS_SERIES = list(range(1, 13))
-RANGE_ACCUMULATOR_SEGMENTS_PARALLEL = list(range(1, 2))
+RANGE_ACCUMULATOR_SEGMENTS_PARALLEL = list(range(1, 13))
 
 RANGES = (
     RANGE_SEGMENT_SERIES,
@@ -38,13 +38,18 @@ RANGES = (
 )
 
 # Targets
-VOLT_TARGET = 400
+VOLT_TARGET = 450
 VOLT_MAX = 600
-VOLT_MIN = 350
+VOLT_MIN = 400
 CAP_TOTAL_MAX_WH = 10000
 CAP_TOTAL_MIN_WH = 2000
 CAP_SEGMENT_MAX_MJ = 6.1
 VOLT_SEGMENT_MAX = 120.1
+WEIGHT_LIMIT_KG = 60
+POWER_NOM_MIN_KW = 30
+
+ALLOW_ODD_SERIES_SEGMENTS = False
+ALLOW_ODD_SERIES_CELLS = True
 
 # ADDITIONAL_CONFIG = [
 #     (6, 1, 16, 8),
@@ -79,7 +84,8 @@ conditionals = {
     "Typ Cap Wh": favorLarge,
     "Max Cap Wh": favorLarge,
     "Wh/Kg": favorLarge,
-    "kW/Kg": favorLarge,
+    "kW/Kg Max": favorLarge,
+    "kW/Kg Nom": favorLarge,
     "Discharge Cont. A": favorLarge,
     "Discharge Peak A": favorLarge,
 }
@@ -93,7 +99,8 @@ accending_sort = [
     ('Power Nom kW', False),
     ('Power Nom kW', False),
     ('Wh/Kg', False),
-    ('kW/Kg', False),
+    ('kW/Kg Max', False),
+    ('kW/Kg Nom', False),
 ]
 
 # for ss, sp, s, p in ADDITIONAL_CONFIG:
@@ -107,14 +114,17 @@ results: List[config_t] = []
 for cell_sel in CELLS:
     for pk_parallel in RANGE_ACCUMULATOR_SEGMENTS_PARALLEL:
         for pk_series in RANGE_ACCUMULATOR_SEGMENTS_SERIES:
+            if not ALLOW_ODD_SERIES_SEGMENTS and pk_series != 1 and pk_series % 2 != 0:
+                continue
             for c_parallel in RANGE_SEGMENT_PARALLEL:
                 for c_series in RANGE_SEGMENT_SERIES:
-                    if c_series != 1 and c_series % 2 != 0:
+                    if not ALLOW_ODD_SERIES_CELLS and c_series != 1 and c_series % 2 != 0:
                         continue
                     conf = config_t(cell_sel, pk_parallel, pk_series, c_parallel, c_series, VOLT_TARGET)
                     if VOLT_MIN <= conf.total_volt_nominal <= VOLT_MAX and CAP_TOTAL_MIN_WH <= conf.total_typ_capacity_wh <= CAP_TOTAL_MAX_WH:
                         if conf.segment_volt_max <= VOLT_SEGMENT_MAX and conf.segment_typ_capacity_mj <= CAP_SEGMENT_MAX_MJ:
-                            results.append(conf)
+                            if conf.weight_kg <= WEIGHT_LIMIT_KG and conf.power_nom_kw >= POWER_NOM_MIN_KW:
+                                results.append(conf)
 
 df = pd.DataFrame([[y for y in x.info().values()] for x in results], columns=list(results[0].info().keys()))
 for k, v in accending_sort:
