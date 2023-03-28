@@ -1,6 +1,7 @@
 import os
 from math import sqrt
 import importlib
+import sys
 
 try:
     import pandas as pd
@@ -130,7 +131,7 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
                 plate_pnts = _box.edges(f"<<X[-{col}] or <<X[-{col+1}]")
                 plate = plate_pnts.circle(collector_radius).edges("<<Y[-1] or <<Y[-2] or <<Y[0] or <<Y[1]")
                 tag = False
-            progress.update(2, "Current Collector : Plating")
+            progress.text("Current Collector : Plating")
             plate_edges = plate.objects
             plate = plate.edges(">>Y[-1]" if (flipped and col != 1) else "<<Y[-1]")
             plate_sk = plate.sketch()
@@ -139,23 +140,23 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
             plate = plate_sk.hull().clean().finalize().extrude(flip*collector_thick, combine=False)
             if col > 1:  # FIXME: shouldn't need this
                 plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + spacing_mm)*(num_rows-0.5)), 0))
-                
-            progress.update(2, "Current Collector : Cutting")
+
+            progress.text("Current Collector : Cutting")
 
             plate_pnts = plate_pnts.sketch()
             plate_pnts = plate_pnts.circle(collector_pad_out_radius).circle(collector_pad_in_radius, mode="s")
-            plate_pnts = plate_pnts.edges().distribute(1).polygon(
+            plate_pnts = plate_pnts.polygon(
                 [
-                    (-collector_fuse_dist/2, -collector_fuse_width/2),
-                    (-collector_fuse_dist/2, collector_fuse_width/2),
-                    (collector_fuse_dist/2, collector_fuse_width/2),
-                    (collector_fuse_dist/2, -collector_fuse_width/2),
+                    (0, -collector_fuse_width/2),
+                    (0, collector_fuse_width/2),
+                    (collector_pad_out_radius, collector_fuse_width/2),
+                    (collector_pad_out_radius, -collector_fuse_width/2),
                 ], mode="s"
             )
             plate_pnts = plate_pnts.clean().finalize().extrude(collector_thick*2, combine=False, both=True)
             plate = plate.cut(plate_pnts).clean()
-            
-            progress.update(2, "Current Collector : Assemble")
+
+            progress.text("Current Collector : Assemble")
 
             clr = [160/255, 165/255, 195/255, 1]
             if tag:
@@ -185,5 +186,7 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
     else:
         return battery_pack
 
-# obj = gen_model("Molicel INR18650-P28B", 4, 3, export=False)
-# show_object(obj)
+
+if 'cq_editor' in sys.modules:
+    CQ_EDITING = True
+    show_object(gen_pack("Molicel INR21700-P45B", 4, 3, export=False))

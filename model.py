@@ -1,5 +1,6 @@
 import cadquery as cq
 import argparse
+import sys
 
 from pack import gen_pack
 
@@ -16,6 +17,8 @@ def main():
 if __name__ == '__main__':
     main()
 
-# pack: cq.Compound = gen_pack("Molicel INR18650-P28B", 4, 3, export=False).toCompound()
-# model = cq.Workplane("XY").add(pack).rotate((0,-1,0), (0,1,0), 90)
-# show_object(model)
+if 'cq_editor' in sys.modules:
+    pack = gen_pack("Molicel INR18650-P28B", 4, 3, export=False)
+    model = cq.Workplane("XY").add(pack.toCompound()).rotate((0, -1, 0), (0, 1, 0), 90)
+    show_object(pack)
+    show_object(model)
