@@ -28,7 +28,14 @@ if not os.path.exists('models'):
 # FIXME: not staggered is broken
 
 
-def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highres=True, step=True, force=False, export=True):
+def gen_pack(
+    cell_name, num_rows, num_cols,
+    pcm_spacing_mm=2,
+    collector_thickness_mm=1,
+    busbar_width_mm=25.4,
+    busbar_thickness_mm=6.35,
+    staggered=True, highres=True, step=True, force=False, export=True,
+):
     progress = progress_bar("Generating Pack Model", num_rows, num_cols)
 
     num_rows = int(num_rows)  # Parallel
@@ -36,7 +43,7 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
 
     # TODO: ability to 'stack' current collection across multiple rows
 
-    filename = os.path.join('models', f'pack_{cell_name}_{num_rows}_{num_cols}_{spacing_mm}_{staggered}'.replace(
+    filename = os.path.join('models', f'pack_{cell_name}_{num_rows}_{num_cols}_{pcm_spacing_mm}_{staggered}'.replace(
         " ", '_').replace("-", '_').replace(".", '_'))
 
     if export and not force and os.path.exists(f'{filename}.stl'):
@@ -48,6 +55,9 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
     df = df[df['cell_name'] == cell_name]
     cell_diameter = int(df['diameter'])
     cell_length = int(df['height'])
+
+    busbar_spacing_mm = busbar_width_mm * 0.25
+    busbar_length_mm = (pcm_spacing_mm + cell_diameter) * num_rows + (cell_diameter / 2) - (pcm_spacing_mm/2)
 
     progress.update(10, "Creating Cylinder Cell")
 
@@ -63,18 +73,17 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
 
     progress.update(10, "Duplicating cells")
 
-    collector_radius = min(wrap_radius * 1.25, (cell_diameter - spacing_mm)/2)
+    collector_radius = max(min(wrap_radius * 1.25, (cell_diameter - pcm_spacing_mm*2)/2), top_radius*1.5)
     collector_pad_out_radius = collector_radius * 0.75
     collector_pad_in_radius = collector_radius * 0.5
-    collector_thick = 1
     collector_fuse_dist = collector_pad_out_radius - collector_pad_in_radius
     collector_fuse_width = (collector_pad_out_radius-collector_pad_in_radius) / 1.5  # TODO: current capacity of nickel
 
     points = []
-    stag = (cell_diameter / 2 + spacing_mm / 2)
-    dist = sqrt(((cell_diameter + spacing_mm)**2) - (stag**2))
+    stag = (cell_diameter / 2 + pcm_spacing_mm / 2)
+    dist = sqrt(((cell_diameter + pcm_spacing_mm)**2) - (stag**2))
     for j in range(num_rows):
-        y = j * (cell_diameter + spacing_mm)
+        y = j * (cell_diameter + pcm_spacing_mm)
         flip = True
         for i in range(num_cols):
             flip = not flip
@@ -96,11 +105,11 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
 
     progress.update(10, "Cutting PCC")
     box = cq.Workplane('XY').box(
-        (dist * (num_cols - 1)) + cell_diameter + spacing_mm * 2,
-        ((num_rows + 0.5) * (cell_diameter + spacing_mm)) + spacing_mm,
+        (dist * (num_cols - 1)) + cell_diameter + pcm_spacing_mm * 2,
+        ((num_rows + 0.5) * (cell_diameter + pcm_spacing_mm)) + pcm_spacing_mm,
         cell_length/2,
         centered=False
-    ).translate((-spacing_mm - cell_diameter/2, -spacing_mm - cell_diameter / 2, cell_length/4))
+    ).translate((-pcm_spacing_mm - cell_diameter/2, -pcm_spacing_mm - cell_diameter / 2, cell_length/4))
     progress.update(5)
     box = box.cut(cells)
     progress.update(5)
@@ -120,6 +129,8 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
         if flipped:
             it.insert(0, 1)
         progress.update(5)
+        same_side = False
+        reverse_out = 1
         for col in it:
             if col+1 > num_cols or (flipped and col == 1):
                 plate_pnts = _box.edges(f"<<X[-{col}]")
@@ -131,18 +142,46 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
                 plate = plate_pnts.circle(collector_radius).edges("<<Y[-1] or <<Y[-2] or <<Y[0] or <<Y[1]")
                 tag = False
             plate_edges = plate.objects
-            plate = plate.edges(">>Y[-1]" if (flipped and col != 1) else "<<Y[-1]")
-            plate_sk = plate.sketch()
+            plate_sk = plate.edges(">>Y[-1]" if (flipped and col != 1) else "<<Y[-1]").sketch()
+            if tag:
+                if same_side:
+                    reverse_out = -1
+                else:
+                    same_side = True
+                rect_spacing = busbar_width_mm + busbar_spacing_mm/4 + collector_radius + pcm_spacing_mm
+                rect_spacing += ((cell_diameter/2)-collector_radius) + collector_thickness_mm/2
+                rect_spacing *= reverse_out*flip
+                edge_plate = plate.rect(collector_thickness_mm, collector_radius*2.00001).translate((rect_spacing, 0, 0))
+                for s in edge_plate.objects:
+                    plate_sk = plate_sk.edge(s)
             for s in plate_edges:
-                plate_sk.edge(s)
-            plate = plate_sk.hull().clean().finalize().extrude(flip*collector_thick, combine=False)
+                plate_sk = plate_sk.edge(s)
+            plate = plate_sk.edges().hull().finalize().extrude(flip*collector_thickness_mm, combine=False)
             if col > 1:  # FIXME: shouldn't need this
-                plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + spacing_mm)*(num_rows-0.5)), 0))
+                plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + pcm_spacing_mm)*(num_rows-0.5)), 0))
+
+            if tag:
+                plate: cq.Workplane = plate
+                add_bar = plate.faces(">Y").first().sketch()
+                shave = 0
+                if reverse_out < 0:
+                    shave = (cell_diameter + pcm_spacing_mm)/2
+                add_bar = add_bar.rect(busbar_width_mm, busbar_thickness_mm).finalize().extrude(shave-busbar_length_mm, combine=False)
+                if reverse_out < 0:
+                    add_bar = add_bar.translate((0,0,-shave/2))
+                add_bar = add_bar.rotateAboutCenter((1, 0, 0), 90)
+                add_bar = add_bar.translate((
+                    reverse_out*flip*busbar_spacing_mm,
+                    (pcm_spacing_mm*1.5 + cell_diameter - collector_radius)-(busbar_length_mm/2)-(shave/2),
+                    (busbar_length_mm/2)-flip*(busbar_thickness_mm+collector_thickness_mm)/2,
+                ))
+                add_bar = add_bar.edges("|Y").fillet(busbar_thickness_mm/2.00001)
+                battery_pack.add(add_bar, color=cq.Color(152/255, 87/255, 57/255, 1))
 
             plate_pnts = plate_pnts.sketch()
             plate_pnts = plate_pnts.circle(collector_pad_out_radius).circle(collector_pad_in_radius, mode="s").clean()
             plate_pnts = plate_pnts.rect(collector_fuse_width, collector_pad_out_radius*2, mode="s")
-            plate_pnts = plate_pnts.clean().finalize().extrude(collector_thick*flip, combine=False).clean()  # Using both breaks it?
+            plate_pnts = plate_pnts.clean().finalize().extrude(collector_thickness_mm*flip, combine=False).clean()  # Using both breaks it?
 
             plate = plate.cut(plate_pnts).clean()
 
@@ -176,4 +215,6 @@ def gen_pack(cell_name, num_rows, num_cols, spacing_mm=2, staggered=True, highre
 
 
 if 'cq_editor' in sys.modules:
-    show_object(gen_pack("Molicel INR21700-P45B", 4, 3, export=False))
+    show_object(gen_pack("Molicel INR21700-P45B", 1, 2, export=False))
+    show_object(gen_pack("Molicel INR21700-P45B", 1, 3, export=False).toCompound().translate((0, 75, 0)))
+    # gen_pack("Molicel INR21700-P45B", 4, 3, export=False)

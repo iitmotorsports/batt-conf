@@ -5,7 +5,7 @@ RAD_CONST = DIAMETER_CONST / 2
 LENGTH_CONST = 65.38
 
 
-def gen_cell(cell_diameter: int, cell_length: int) -> tuple[cq.Workplane, float, float]:
+def gen_cell(cell_diameter: float, cell_length: float) -> tuple[cq.Workplane, float, float]:
     cell_radius = cell_diameter / 2
 
     cell_body_length = (65 / LENGTH_CONST) * cell_length
