@@ -59,6 +59,13 @@ def gen_pack(
     busbar_spacing_mm = busbar_width_mm * 0.25
     busbar_length_mm = (pcm_spacing_mm + cell_diameter) * num_rows + (cell_diameter / 2) - (pcm_spacing_mm/2)
 
+    busbar_bolt_head_height_mm = 8.1
+    busbar_bolt_head_radius_mm = 20
+    busbar_bolt_thread_radius_mm = 8 + 0.1
+    busbar_bolt_thread_height_mm = 20
+
+    formex_thickness_mm = 2.5  # TODO
+
     progress.update(10, "Creating Cylinder Cell")
 
     # Create a cell cylinder
@@ -78,6 +85,7 @@ def gen_pack(
     collector_pad_in_radius = collector_radius * 0.5
     collector_fuse_dist = collector_pad_out_radius - collector_pad_in_radius
     collector_fuse_width = (collector_pad_out_radius-collector_pad_in_radius) / 1.5  # TODO: current capacity of nickel
+    collector_bend_radius = collector_thickness_mm * 4
 
     points = []
     stag = (cell_diameter / 2 + pcm_spacing_mm / 2)
@@ -148,35 +156,65 @@ def gen_pack(
                     reverse_out = -1
                 else:
                     same_side = True
-                rect_spacing = busbar_width_mm + busbar_spacing_mm/4 + collector_radius + pcm_spacing_mm
-                rect_spacing += ((cell_diameter/2)-collector_radius) + collector_thickness_mm/2
-                rect_spacing *= reverse_out*flip
-                edge_plate = plate.rect(collector_thickness_mm, collector_radius*2.00001).translate((rect_spacing, 0, 0))
-                for s in edge_plate.objects:
+                rect_spacing = collector_radius + pcm_spacing_mm + (cell_diameter/2 - collector_radius) # Collector is flush on edge with pcc
+                # clad_height = (pcm_spacing_mm + (collector_radius*2)) * num_rows + collector_radius - (pcm_spacing_mm/2)
+                # clad_height = clad_height if num_rows > 1 else (collector_radius*2)
+                # clad_pad = clad_height/2 - collector_radius + (pcm_spacing_mm/2) if num_rows > 1 else 0
+                # rect_spacing += busbar_bolt_head_height_mm + formex_thickness_mm  # busbar goes on outside # add tolerance?
+                # rect_spacing += collector_bend_radius
+                # rect_spacing *= reverse_out*flip
+                # edge_plate = plate.rect(collector_thickness_mm, collector_radius*2.00001).translate((rect_spacing, 0, 0))
+                # plate_sk = plate_sk.circle(collector_radius)
+                # plate_sk = plate_sk.moved(cq.Location((reverse_out*flip*(rect_spacing+collector_radius*2)/2, 0, 0)))
+                plate_sk = plate_sk.rect(rect_spacing+(collector_radius*2), clad_height)
+                # plate_sk = plate_sk.moved(cq.Location((-reverse_out*flip*(rect_spacing+collector_radius*2)/2, 0, 0)))
+                plate_sk = plate_sk.finalize().extrude(flip*collector_thickness_mm, combine=False)
+                plate = plate_sk.translate((0, -reverse_out*flip*clad_pad, 0))
+                # show_object(plate_sk)
+                # plate = plate_sk.edges().hull().finalize().extrude(flip*collector_thickness_mm, combine=False)
+                # plate = plate.extrude
+                # show_object()
+            #     for s in edge_plate.objects:
+            #         plate_sk = plate_sk.edge(s)
+            else:
+                for s in plate_edges:
                     plate_sk = plate_sk.edge(s)
-            for s in plate_edges:
-                plate_sk = plate_sk.edge(s)
-            plate = plate_sk.edges().hull().finalize().extrude(flip*collector_thickness_mm, combine=False)
-            if col > 1:  # FIXME: shouldn't need this
-                plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + pcm_spacing_mm)*(num_rows-0.5)), 0))
+                plate = plate_sk.edges().hull().finalize().extrude(flip*collector_thickness_mm, combine=False)
+                if col > 1:  # FIXME: shouldn't need this
+                    plate = plate.translate((-dist*(col-1), add*(-(cell_diameter + pcm_spacing_mm)*(num_rows-0.5)), 0))
+            # if tag:  # add bended clad section
+            #     # edge_plate = edge_plate.edges("not %CIRCLE")
+            #     # bend: cq.Workplane = plate.faces("<<X" if flipped and not reverse_out < 0 else ">>X")
+            #     # bend = bend.edges("<<Z" if not flipped and reverse_out > 0 else ">>Z")
+            #     mult = -1 if not flipped and reverse_out > 0 else 1
+            #     # bend = bend.sketch()
+            #     bend = edge_plate.workplane().sketch()
+            #     bend = bend.rect(collector_thickness_mm, 10).clean().finalize().extrude(mult*10, combine=False)
+            #     bend = bend.translate((-reverse_out*flip*collector_thickness_mm/2, 0, 0))
+            #     # bend = edge_plate.workplane().sketch().edge(edge_plate.objects[0]).edges().hull().finalize().extrude(10, combine=False)
+            #     plate = plate.union(bend).clean()
+            #     # show_object(bend)
 
-            if tag:
-                plate: cq.Workplane = plate
-                add_bar = plate.faces(">Y").first().sketch()
-                shave = 0
-                if reverse_out < 0:
-                    shave = (cell_diameter + pcm_spacing_mm)/2
-                add_bar = add_bar.rect(busbar_width_mm, busbar_thickness_mm).finalize().extrude(shave-busbar_length_mm, combine=False)
-                if reverse_out < 0:
-                    add_bar = add_bar.translate((0,0,-shave/2))
-                add_bar = add_bar.rotateAboutCenter((1, 0, 0), 90)
-                add_bar = add_bar.translate((
-                    reverse_out*flip*busbar_spacing_mm,
-                    (pcm_spacing_mm*1.5 + cell_diameter - collector_radius)-(busbar_length_mm/2)-(shave/2),
-                    (busbar_length_mm/2)-flip*(busbar_thickness_mm+collector_thickness_mm)/2,
-                ))
-                add_bar = add_bar.edges("|Y").fillet(busbar_thickness_mm/2.00001)
-                battery_pack.add(add_bar, color=cq.Color(152/255, 87/255, 57/255, 1))
+            busbar_collector_len = busbar_width_mm + busbar_spacing_mm/4
+            # to_pcc_padding =
+
+            # if tag:
+            #     plate: cq.Workplane = plate
+            #     add_bar = plate.faces(">Y").first().sketch()
+            #     shave = 0
+            #     if reverse_out < 0:
+            #         shave = (cell_diameter + pcm_spacing_mm)/2
+            #     add_bar = add_bar.rect(busbar_width_mm, busbar_thickness_mm).finalize().extrude(shave-busbar_length_mm, combine=False)
+            #     if reverse_out < 0:
+            #         add_bar = add_bar.translate((0,0,-shave/2))
+            #     add_bar = add_bar.rotateAboutCenter((1, 0, 0), 90)
+            #     add_bar = add_bar.translate((
+            #         reverse_out*flip*busbar_spacing_mm,
+            #         (pcm_spacing_mm*1.5 + cell_diameter - collector_radius)-(busbar_length_mm/2)-(shave/2),
+            #         (busbar_length_mm/2)-flip*(busbar_thickness_mm+collector_thickness_mm)/2,
+            #     ))
+            #     add_bar = add_bar.edges("|Y").fillet(busbar_thickness_mm/2.00001)
+            #     battery_pack.add(add_bar, color=cq.Color(152/255, 87/255, 57/255, 1))
 
             plate_pnts = plate_pnts.sketch()
             plate_pnts = plate_pnts.circle(collector_pad_out_radius).circle(collector_pad_in_radius, mode="s").clean()
@@ -184,6 +222,8 @@ def gen_pack(
             plate_pnts = plate_pnts.clean().finalize().extrude(collector_thickness_mm*flip, combine=False).clean()  # Using both breaks it?
 
             plate = plate.cut(plate_pnts).clean()
+            # if tag:
+            #     plate = plate.union(bend)
 
             clr = [160/255, 165/255, 195/255, 1]
             if tag:
@@ -215,6 +255,8 @@ def gen_pack(
 
 
 if 'cq_editor' in sys.modules:
-    show_object(gen_pack("Molicel INR21700-P45B", 1, 2, export=False))
-    show_object(gen_pack("Molicel INR21700-P45B", 1, 3, export=False).toCompound().translate((0, 75, 0)))
-    # gen_pack("Molicel INR21700-P45B", 4, 3, export=False)
+    show_object(gen_pack("Molicel INR21700-P45B", 4, 6, export=False))
+    # show_object(gen_pack("Molicel INR21700-P45B", 1, 2, export=False))
+    # show_object(gen_pack("Molicel INR21700-P45B", 1, 3, export=False).toCompound().translate((0, 75, 0)))
+    # gen_pack("Molicel INR21700-P45B", 1, 2, export=False)
+    # gen_pack("Molicel INR21700-P45B", 1, 3, export=False)
