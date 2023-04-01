@@ -5,6 +5,15 @@ RAD_CONST = DIAMETER_CONST / 2
 LENGTH_CONST = 65.38
 
 
+def gen_cell_lowres(cell_diameter: float, cell_length: float) -> tuple[cq.Workplane, float, float]:
+    cell = cq.Workplane('XY').circle(cell_diameter / 2)\
+        .extrude(cell_length).edges().chamfer(1.5)\
+        .faces(">Z").workplane().circle(cell_diameter/3).cutBlind(-0.5)
+    top_radius = (4.75 / RAD_CONST) * cell_diameter/2
+    wrap_radius = (7.325 / RAD_CONST) * cell_diameter/2
+    return cell, top_radius, wrap_radius
+
+
 def gen_cell(cell_diameter: float, cell_length: float) -> tuple[cq.Workplane, float, float]:
     cell_radius = cell_diameter / 2
 
