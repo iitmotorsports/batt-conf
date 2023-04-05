@@ -1,4 +1,3 @@
-import math
 import os
 from math import sqrt
 import importlib
@@ -238,7 +237,7 @@ def gen_pack(
                 bolt_head = bolt_head.extrude(busbar_bolt_head_height_mm, combine=False).rotateAboutCenter((0, 1, 0), -90)
                 bolt_head = bolt_head.translate((-reverse_out*flip*busbar_bolt_head_height_mm/2, 0, -busbar_bolt_head_height_mm/2))
                 bolts = bolts.union(bolt_head)
-                
+
                 nut = add_bar.edges(">>X" if same_side or not flipped else "<<X").edges("%CIRCLE")
                 nut = nut.sketch().circle(busbar_nut_radius_mm).finalize()
                 nut = nut.extrude(busbar_nut_height_mm, combine=False).rotateAboutCenter((0, 1, 0), -90)

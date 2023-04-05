@@ -1,7 +1,12 @@
-import cadquery as cq
-import argparse
 import sys
+import argparse
+import platform
+
+if list(map(int, platform.python_version_tuple())) >= [3, 11, 0]:
+    sys.exit("Current libraries only support below python 3.11")
+
 import progress_bar
+import cadquery as cq
 
 from pack import gen_pack
 

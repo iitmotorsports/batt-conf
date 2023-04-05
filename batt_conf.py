@@ -1,7 +1,12 @@
 from math import sqrt
 import os
+import sys
 from typing import List
 import importlib
+import platform
+
+if list(map(int, platform.python_version_tuple())) >= [3, 11, 0]:
+    sys.exit("Current libraries only support below python 3.11")
 
 try:
     import openpyxl
@@ -10,7 +15,7 @@ try:
     import tqdm
 except ImportError:
     print("Some required packages are missing. Installing now...")
-    os.system('pip install -r requirements.txt')
+    os.system('pip3.10 install -r requirements.txt')
     importlib.invalidate_caches()
 
 import pandas as pd
@@ -47,6 +52,7 @@ CAP_SEGMENT_MAX_MJ = 6.1
 VOLT_SEGMENT_MAX = 120.1
 WEIGHT_LIMIT_KG = 60
 POWER_NOM_MIN_KW = 40
+POWER_MAX_MIN_KW = 70
 
 ALLOW_ODD_SERIES_SEGMENTS = False
 ALLOW_ODD_SERIES_CELLS = True
@@ -123,7 +129,7 @@ for cell_sel in CELLS:
                     conf = config_t(cell_sel, pk_parallel, pk_series, c_parallel, c_series, VOLT_TARGET)
                     if VOLT_MIN <= conf.total_volt_nominal <= VOLT_MAX and CAP_TOTAL_MIN_WH <= conf.total_typ_capacity_wh <= CAP_TOTAL_MAX_WH:
                         if conf.segment_volt_max <= VOLT_SEGMENT_MAX and conf.segment_typ_capacity_mj <= CAP_SEGMENT_MAX_MJ:
-                            if conf.weight_kg <= WEIGHT_LIMIT_KG and conf.power_nom_kw >= POWER_NOM_MIN_KW:
+                            if conf.weight_kg <= WEIGHT_LIMIT_KG and conf.power_nom_kw >= POWER_NOM_MIN_KW and conf.power_max_kw >= POWER_MAX_MIN_KW:
                                 results.append(conf)
 
 df = pd.DataFrame([[y for y in x.info().values()] for x in results], columns=list(results[0].info().keys()))
